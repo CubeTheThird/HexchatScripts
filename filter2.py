@@ -3,8 +3,11 @@ __module_version__ = '3.2'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
-#with python 3 replace urllib2
-import urllib.request
+import sys
+if sys.version_info[0] < 3:
+	import urllib2
+else: 
+	import urllib.request
 import json
 from time import time
 
@@ -65,8 +68,11 @@ def new_msg(word, word_eol, event, attrs):
 		#get geoip
 		#Python3, urllib2.urlopen("http://example.com/foo/bar").read()
 		try:
-			data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
-			geoip = data["region_name"] + ", " + data["country_name"]
+			if sys.version_info[0] < 3:
+				data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
+			else: 
+				data = json.loads(urllib2.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
+				geoip = data["region_name"] + ", " + data["country_name"]
 		except:
 			geoip = ""
 
