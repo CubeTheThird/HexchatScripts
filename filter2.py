@@ -1,5 +1,5 @@
 __module_name__ = 'Filter2'
-__module_version__ = '3.2'
+__module_version__ = '3.3'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
