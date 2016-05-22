@@ -1,12 +1,12 @@
 __module_name__ = 'Filter2'
-__module_version__ = '3.3'
+__module_version__ = '3.4'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
 import sys
 if sys.version_info[0] < 3:
 	import urllib2
-else: 
+else:
 	import urllib.request
 import json
 from time import time
@@ -64,17 +64,20 @@ def new_msg(word, word_eol, event, attrs):
 	#user never spoke before
 	if last_seen[host][1] == 0:
 		time_diff = time() - last_seen[host][0]
-		
+
 		#get geoip
 		#Python3, urllib2.urlopen("http://example.com/foo/bar").read()
 		try:
 			if sys.version_info[0] < 3:
-				data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
-			else: 
 				data = json.loads(urllib2.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
 				geoip = data["region_name"] + ", " + data["country_name"]
-		except:
+			else:
+				data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
+				geoip = data["region_name"] + ", " + data["country_name"]
+		except Exception as e:
 			geoip = ""
+			if debug_output:
+				print("\00315 " + e)
 
 		if user == last_seen[host][2]:
 			word[1] += " \00307(logged in %s ago from \00302%s %s\00307)" % (human_readable(time_diff),host,geoip)
