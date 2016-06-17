@@ -1,5 +1,5 @@
 __module_name__ = 'Filter2'
-__module_version__ = '3.4'
+__module_version__ = '3.5'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
@@ -20,6 +20,8 @@ user_timeout = 600	#ignore if timeout is surpassed
 halt = False
 
 debug_output = False
+
+geoip_output = False
 
 def human_readable(s):
 	deltas = [
@@ -67,17 +69,18 @@ def new_msg(word, word_eol, event, attrs):
 
 		#get geoip
 		#Python3, urllib2.urlopen("http://example.com/foo/bar").read()
-		try:
-			if sys.version_info[0] < 3:
-				data = json.loads(urllib2.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
-				geoip = data["region_name"] + ", " + data["country_name"]
-			else:
-				data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
-				geoip = data["region_name"] + ", " + data["country_name"]
-		except Exception as e:
-			geoip = ""
-			if debug_output:
-				print("\00315 " + e)
+		geoip = ""
+		if geoip_output:
+			try:
+				if sys.version_info[0] < 3:
+					data = json.loads(urllib2.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
+					geoip = data["region_name"] + ", " + data["country_name"]
+				else:
+					data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
+					geoip = data["region_name"] + ", " + data["country_name"]
+			except Exception as e:
+				if debug_output:
+					print("\00315 " + e)
 
 		if user == last_seen[host][2]:
 			word[1] += " \00307(logged in %s ago from \00302%s %s\00307)" % (human_readable(time_diff),host,geoip)
@@ -179,6 +182,15 @@ def toggle_debug_output(word, word_eol, userdata):
 	debug_output = not debug_output
 	print(text)
 
+def toggle_geoip(word, word_eol, userdata):
+
+	global geoip_output
+	text = "Geoip info is now "
+	if geoip_output:
+		text += "hidden."
+	else:
+		text += "shown."
+
 hooks_new = ["Your Message", "Channel Message", "Channel Msg Hilight", "Your Action", "Channel Action", "Channel Action Hilight"]
 hooks_filter = ["Join", "Change Nick", "Part", "Part with Reason", "Quit"]
 # hook_print_attrs is used for compatibility with my other scripts, since priorities are hook specific
@@ -188,5 +200,6 @@ for hook in hooks_filter:
 	hexchat.hook_print_attrs(hook, filter_msg, hook, hexchat.PRI_HIGH)
 
 hexchat.hook_command("toggledebug", toggle_debug_output, help="/toggledebug shows or hides " + __module_name__ + " debug output")
+hexchat.hook_command("togglegeoip", toggle_geoip, help="/togglegeoip shows or hides " + __module_name__ + " geoip output")
 
 print("\00304" + __module_name__ + " successfully loaded.\003")
