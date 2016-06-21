@@ -1,5 +1,5 @@
 __module_name__ = 'Filter2'
-__module_version__ = '3.5'
+__module_version__ = '3.6'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
@@ -10,6 +10,7 @@ else:
 	import urllib.request
 import json
 from time import time
+import socket
 
 last_seen = {}	# List where key is host
 				# 0 : last seen
@@ -68,16 +69,19 @@ def new_msg(word, word_eol, event, attrs):
 		time_diff = time() - last_seen[host][0]
 
 		#get geoip
-		#Python3, urllib2.urlopen("http://example.com/foo/bar").read()
 		geoip = ""
-		if geoip_output:
+		if geoip_output and len(''.join(host.split('@')[1:]).split('.')) > 1 or len(''.join(host.split('@')[1:]).split(':')):
+			try:
+				ip = socket.gethostbyname(host.split('@')[1])
+			except Exception as e:
+				ip = host.split('@')[1]
 			try:
 				if sys.version_info[0] < 3:
-					data = json.loads(urllib2.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
-					geoip = data["region_name"] + ", " + data["country_name"]
+					data = json.loads(urllib2.urlopen("http://ip-api.com/json/" + ip).read().decode("utf-8"))
 				else:
-					data = json.loads(urllib.request.urlopen("https://freegeoip.net/json/" + host.split('@')[1]).read().decode("utf-8"))
-					geoip = data["region_name"] + ", " + data["country_name"]
+					data = json.loads(urllib.request.urlopen("http://ip-api.com/json/" + ip).read().decode("utf-8"))
+				if data["status"] == "success":
+					geoip = data["regionName"] + ", " + data["country"]
 			except Exception as e:
 				if debug_output:
 					print("\00315 " + e)
@@ -190,6 +194,8 @@ def toggle_geoip(word, word_eol, userdata):
 		text += "hidden."
 	else:
 		text += "shown."
+	geoip_output = not geoip_output
+	print(text)
 
 hooks_new = ["Your Message", "Channel Message", "Channel Msg Hilight", "Your Action", "Channel Action", "Channel Action Hilight"]
 hooks_filter = ["Join", "Change Nick", "Part", "Part with Reason", "Quit"]
