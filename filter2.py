@@ -1,5 +1,5 @@
 __module_name__ = 'Filter2'
-__module_version__ = '3.6'
+__module_version__ = '3.7'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
@@ -68,28 +68,15 @@ def new_msg(word, word_eol, event, attrs):
 	if last_seen[host][1] == 0:
 		time_diff = time() - last_seen[host][0]
 
+		ip = get_ip(host)
+
 		#get geoip
-		geoip = ""
-		if geoip_output and len(''.join(host.split('@')[1:]).split('.')) > 1 or len(''.join(host.split('@')[1:]).split(':')):
-			try:
-				ip = socket.gethostbyname(host.split('@')[1])
-			except Exception as e:
-				ip = host.split('@')[1]
-			try:
-				if sys.version_info[0] < 3:
-					data = json.loads(urllib2.urlopen("http://ip-api.com/json/" + ip).read().decode("utf-8"))
-				else:
-					data = json.loads(urllib.request.urlopen("http://ip-api.com/json/" + ip).read().decode("utf-8"))
-				if data["status"] == "success":
-					geoip = data["regionName"] + ", " + data["country"]
-			except Exception as e:
-				if debug_output:
-					print("\00315 " + e)
+		geoip = get_geoip(host)
 
 		if user == last_seen[host][2]:
-			word[1] += " \00307(logged in %s ago from \00302%s %s\00307)" % (human_readable(time_diff),host,geoip)
+			word[1] += " \00307(logged in %s ago from \00302%s \00310%s\00307)" % (human_readable(time_diff),host.split('@')[0] + '@' + ip,geoip)
 		else:
-			word[1] += " \00307(logged in %s ago. Formerly \00302%s\00307 from \00302%s %s\00307)" % (human_readable(time_diff),last_seen[host][2],host,geoip) #added host for debug purposes
+			word[1] += " \00307(logged in %s ago. Formerly \00302%s\00307 from \00302%s \00310%s\00307)" % (human_readable(time_diff),last_seen[host][2],host.split('@')[0] + '@' + ip,geoip) #added host for debug purposes
 			last_seen[host][2] = user
 		halt = True
 		hexchat.emit_print(event, *word)
@@ -112,6 +99,7 @@ def filter_msg(word, word_eol, event, attrs):
 	#Join event
 	if event == "Join":
 		host = hexchat.strip(word[2])
+		ip = get_ip(host)
 		if debug_output:
 			host2 = "NULL"
 			for u in hexchat.get_list("users"):
@@ -127,7 +115,7 @@ def filter_msg(word, word_eol, event, attrs):
 			return hexchat.EAT_ALL
 		elif(last_seen[host][2] != user):
 			if last_seen[host][1] == 1:
-				word[2] = "Formerly \00302%s\00307" % (last_seen[host][2])
+				word[2] = "Formerly \00302%s\00307 from \00302%s \00310%s\00307" % (last_seen[host][2],ip,get_geoip(host))
 				halt = True
 				hexchat.emit_print(event, *word)
 				halt = False
@@ -173,6 +161,31 @@ def filter_msg(word, word_eol, event, attrs):
 		if debug_output:
 			print("\00315Supressed old user event " + event + " from user " + user)
 		return hexchat.EAT_ALL
+
+def get_ip(host):
+	try:
+		ip = socket.gethostbyname(host.split('@')[1])
+	except Exception as e:
+		ip = host.split('@')[1]
+	return ip
+
+def get_geoip(host):
+	global geoip_output
+	global debug_output
+	geoip = ""
+	if geoip_output and (len(''.join(host.split('@')[1:]).split('.')) > 1 or len(''.join(host.split('@')[1:]).split(':'))):
+		ip = get_ip(host)
+		try:
+			if sys.version_info[0] < 3:
+				data = json.loads(urllib2.urlopen("http://ip-api.com/json/" + ip).read().decode("utf-8"))
+			else:
+				data = json.loads(urllib.request.urlopen("http://ip-api.com/json/" + ip).read().decode("utf-8"))
+			if data["status"] == "success":
+				geoip = data["regionName"] + ", " + data["country"]
+		except Exception as e:
+			if debug_output:
+				print("\00315 " + e)
+	return geoip
 
 def toggle_debug_output(word, word_eol, userdata):
 
