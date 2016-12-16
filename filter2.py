@@ -222,11 +222,10 @@ def get_geoip(ip):
 	geoip = ""
 	if geoip_output and (len(''.join(ip).split('.')) > 1 or len(''.join(ip).split(':')) > 1):
 		try:
-			#NOTE: Address changed to IP for DNS reasons
 			if sys.version_info[0] < 3:
-				data = json.loads(urllib2.urlopen("http://162.250.144.215/json/" + ip, timeout=1).read().decode("utf-8"))
+				data = json.loads(urllib2.urlopen("http://ip-api.com/json/" + ip, timeout=1).read().decode("utf-8"))
 			else:
-				data = json.loads(urllib.request.urlopen("http://162.250.144.215/json/" + ip, timeout=1).read().decode("utf-8"))
+				data = json.loads(urllib.request.urlopen("http://ip-api.com/json/" + ip, timeout=1).read().decode("utf-8"))
 			if data["status"] == "success":
 				geoip = data["regionName"] + ", " + data["country"]
 		except Exception as e:
