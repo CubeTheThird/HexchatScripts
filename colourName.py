@@ -1,5 +1,5 @@
 __module_name__ = 'Name Colourer'
-__module_version__ = '1.5'
+__module_version__ = '1.6'
 __module_description__ = 'Colours names in chat messages using HexChat colouring'
 
 import hexchat
@@ -31,6 +31,7 @@ def colour_names(word, word_eol, event, attrs):
 	word[1] = message
 	halt = True
 	hexchat.emit_print(event, *word)
+	hexchat.command('gui color 2')
 	halt = False
 	return hexchat.EAT_ALL
 

@@ -1,5 +1,5 @@
 __module_name__ = 'Filter2'
-__module_version__ = '4.0'
+__module_version__ = '4.1'
 __module_description__ = 'Filters join/part messages by hosts'
 
 import hexchat
@@ -81,6 +81,7 @@ def new_msg(word, word_eol, event, attrs):
 	if  user_host == "NULL" or user == "NULL":
 		halt = True
 		hexchat.emit_print(event, *word)
+		hexchat.command('gui color 2')
 		halt = False
 		if debug_output:
 			print("\00315Supressed invalid user case")
@@ -102,6 +103,7 @@ def new_msg(word, word_eol, event, attrs):
 		#print message
 		halt = True
 		hexchat.emit_print(event, *word)
+		hexchat.command('gui color 2')
 		halt = False
 		last_seen[user_host][1] = True
 		return hexchat.EAT_ALL
@@ -148,6 +150,7 @@ def filter_msg(word, word_eol, event, attrs):
 				word[2] = "Formerly \00302%s\00307 from \00302%s \00310%s\00307" % (last_seen[user_host][2],user_ip,get_geoip(user_ip))
 				halt = True
 				hexchat.emit_print(event, *word)
+				hexchat.command('gui color 2')
 				halt = False
 			last_seen[user_host][2] = user_name
 			return hexchat.EAT_ALL
@@ -219,10 +222,11 @@ def get_geoip(ip):
 	geoip = ""
 	if geoip_output and (len(''.join(ip).split('.')) > 1 or len(''.join(ip).split(':')) > 1):
 		try:
+			#NOTE: Address changed to IP for DNS reasons
 			if sys.version_info[0] < 3:
-				data = json.loads(urllib2.urlopen("http://ip-api.com/json/" + ip, timeout=1).read().decode("utf-8"))
+				data = json.loads(urllib2.urlopen("http://162.250.144.215/json/" + ip, timeout=1).read().decode("utf-8"))
 			else:
-				data = json.loads(urllib.request.urlopen("http://ip-api.com/json/" + ip, timeout=1).read().decode("utf-8"))
+				data = json.loads(urllib.request.urlopen("http://162.250.144.215/json/" + ip, timeout=1).read().decode("utf-8"))
 			if data["status"] == "success":
 				geoip = data["regionName"] + ", " + data["country"]
 		except Exception as e:

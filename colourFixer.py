@@ -1,5 +1,5 @@
 __module_name__ = 'Colour Fixer'
-__module_version__ = '0.8'
+__module_version__ = '0.9'
 __module_description__ = 'Fixes Colour Removal'
 
 import hexchat
@@ -25,6 +25,7 @@ def test(word, word_eol, event, attrs):
     word[1] = message
     halt = True
     hexchat.emit_print(event, *word)
+    hexchat.command('gui color 2')
     halt = False
     return hexchat.EAT_ALL
 
